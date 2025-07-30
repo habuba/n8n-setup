@@ -3,10 +3,10 @@ package_update: true
 package_upgrade: true
 
 runcmd:
-  - echo "🔧 Installing dependencies..."
+  - echo "🔧 Installing system dependencies..."
   - apt update && apt install -y python3 python3-pip curl git gnupg ca-certificates lsb-release
 
-  - echo "🐍 Installing Python packages..."
+  - echo "🐍 Installing Python + yt-dlp..."
   - pip3 install --upgrade pip
   - pip3 install yt-dlp
 
@@ -17,13 +17,37 @@ runcmd:
   - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
   - apt update && apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-  - echo "📦 Cloning setup repo..."
-  - git clone https://github.com/habuba/n8n-setup.git /root/n8n-setup
+  - echo "📁 Setting up n8n directory..."
+  - mkdir -p /root/n8n && cd /root/n8n
 
-  - echo "🔐 Making scripts executable"
-  - chmod -R +x /root/n8n-setup/n8n_hetzner_setup_full/scripts
-  - chmod +x /root/n8n-setup/n8n_hetzner_setup_full/*.sh
+  - echo "📦 Creating docker-compose.yml..."
+  - |
+    cat <<EOF > /root/n8n/docker-compose.yml
+    version: "3.8"
+    services:
+      n8n:
+        image: n8nio/n8n:latest
+        container_name: n8n
+        restart: always
+        ports:
+          - "443:5678"
+        environment:
+          - GENERIC_TIMEZONE=Asia/Jerusalem
+          - N8N_BASIC_AUTH_ACTIVE=true
+          - N8N_BASIC_AUTH_USER=admin
+          - N8N_BASIC_AUTH_PASSWORD=admin1234
+          - N8N_PROTOCOL=https
+          - N8N_HOST=0.0.0.0
+          - WEBHOOK_URL=https://$(curl -s https://api.ipify.org).nip.io/
+          - N8N_RUNNERS_ENABLED=true
+        volumes:
+          - ./data:/home/node/.n8n
+    EOF
 
-  - echo "🚀 Running installation with NIP..."
-  - cd /root/n8n-setup/n8n_hetzner_setup_full
-  - ./install_with_nip.sh
+  - echo "✅ Enabling Docker at boot and starting n8n..."
+  - systemctl enable docker
+  - cd /root/n8n
+  - docker compose pull
+  - docker compose up -d
+
+final_message: "✅ n8n setup complete. Access via https://<your-ip>.nip.io/"
