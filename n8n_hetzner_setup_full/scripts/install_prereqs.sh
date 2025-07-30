@@ -1,3 +1,12 @@
 #!/bin/bash
-# Placeholder for install_prereqs.sh
-echo Running install_prereqs.sh
+set -e
+
+echo "🐍 Installing Python requirements..."
+
+apt update -y
+apt install -y python3 python3-pip
+
+pip3 install --upgrade pip
+pip3 install yt-dlp
+
+echo "✅ Python and yt-dlp installed"

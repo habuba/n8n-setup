@@ -1,8 +1,26 @@
 #cloud-config
 package_update: true
+package_upgrade: true
 packages:
+  - curl
+  - unzip
   - git
+  - ca-certificates
+  - gnupg
+  - lsb-release
+
 runcmd:
-  - git clone https://github.com/habuba/n8n-setup.git /root/n8n-setup
-  - chmod +x /root/n8n-setup/n8n_hetzner_setup_full/cloud_install_logged.sh
-  - /bin/bash /root/n8n-setup/n8n_hetzner_setup_full/cloud_install_logged.sh
+  - |
+    mkdir -p /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    echo       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu       $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    apt-get update
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    systemctl enable docker
+    systemctl start docker
+  - |
+    cd /root
+    git clone https://github.com/habuba/n8n-setup.git
+    cd n8n-setup/n8n_hetzner_setup_full
+    chmod +x install_with_nip.sh
+    ./install_with_nip.sh
