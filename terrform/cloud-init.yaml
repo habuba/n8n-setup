@@ -1,0 +1,8 @@
+#cloud-config
+package_update: true
+packages:
+  - git
+runcmd:
+  - git clone https://github.com/habuba/n8n-setup.git /root/n8n-setup
+  - chmod +x /root/n8n-setup/n8n_hetzner_setup_full/cloud_install.sh
+  - /bin/bash /root/n8n-setup/n8n_hetzner_setup_full/cloud_install.sh
