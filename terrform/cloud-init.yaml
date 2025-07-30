@@ -1,8 +1,32 @@
 #cloud-config
 package_update: true
-packages:
-  - git
+package_upgrade: true
+
 runcmd:
-  - git clone https://github.com/habuba/n8n-setup.git /root/n8n-setup
-  - chmod +x /root/n8n-setup/n8n_hetzner_setup_full/cloud_install_logged.sh
-  - /bin/bash /root/n8n-setup/n8n_hetzner_setup_full/cloud_install_logged.sh
+  - echo "📦 Installing Docker if not already installed..."
+  - |
+    if ! command -v docker &> /dev/null; then
+      curl -fsSL https://get.docker.com -o get-docker.sh
+      sh get-docker.sh
+      systemctl enable docker
+      systemctl start docker
+    fi
+
+  - echo "🔧 Installing additional packages..."
+  - apt update -y
+  - apt install -y unzip curl git python3 python3-pip
+
+  - echo "🐍 Installing yt-dlp"
+  - pip3 install -U yt-dlp
+
+  - echo "📦 Cloning setup repo..."
+  - git clone https://github.com/habuba/n8n-setup.git
+
+  - echo "🔐 Making scripts executable"
+  - chmod +x /root/n8n-setup/n8n_hetzner_setup_full/*.sh
+  - chmod -R +x /root/n8n-setup/n8n_hetzner_setup_full/scripts
+  - chmod +x /root/n8n-setup/n8n_hetzner_setup_full/install_with_nip.sh
+
+  - echo "🚀 Running installation with NIP..."
+  - cd /root/n8n-setup/n8n_hetzner_setup_full
+  - ./install_with_nip.sh
