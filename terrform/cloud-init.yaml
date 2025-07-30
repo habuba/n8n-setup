@@ -17,13 +17,13 @@ runcmd:
   - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
   - apt update && apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-  - echo "📁 Setting up n8n directory..."
-  - mkdir -p /root/n8n && cd /root/n8n
+  - echo "📁 Creating /root/n8n directory and setting permissions"
+  - mkdir -p /root/n8n/data
+  - chown -R 1000:1000 /root/n8n/data
 
-  - echo "📦 Creating docker-compose.yml..."
+  - echo "📦 Writing docker-compose.yml file"
   - |
     cat <<EOF > /root/n8n/docker-compose.yml
-    version: "3.8"
     services:
       n8n:
         image: n8nio/n8n:latest
@@ -33,21 +33,29 @@ runcmd:
           - "443:5678"
         environment:
           - GENERIC_TIMEZONE=Asia/Jerusalem
-          - N8N_BASIC_AUTH_ACTIVE=true
-          - N8N_BASIC_AUTH_USER=admin
-          - N8N_BASIC_AUTH_PASSWORD=admin1234
           - N8N_PROTOCOL=https
           - N8N_HOST=0.0.0.0
-          - WEBHOOK_URL=https://$(curl -s https://api.ipify.org).nip.io/
+          - WEBHOOK_URL=https://\$(curl -s https://api.ipify.org).nip.io/
           - N8N_RUNNERS_ENABLED=true
+        env_file:
+          - /root/n8n/.env
         volumes:
           - ./data:/home/node/.n8n
     EOF
 
-  - echo "✅ Enabling Docker at boot and starting n8n..."
+  - echo "🔐 Writing credentials to .env"
+  - |
+    cat <<EOF > /root/n8n/.env
+    N8N_BASIC_AUTH_ACTIVE=true
+    N8N_BASIC_AUTH_USER=admin
+    N8N_BASIC_AUTH_PASSWORD=admin1234
+    EOF
+  - chmod 600 /root/n8n/.env
+
+  - echo "✅ Enabling Docker and starting n8n"
   - systemctl enable docker
   - cd /root/n8n
   - docker compose pull
   - docker compose up -d
 
-final_message: "✅ n8n setup complete. Access via https://<your-ip>.nip.io/"
+final_message: "✅ n8n is up and running at https://<your-ip>.nip.io"
