@@ -1,16 +1,26 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -euo pipefail
-cd "$(dirname "$0")/scripts"
-IP=$(curl -s https://checkip.amazonaws.com)
-DOMAIN="$IP.nip.io"
-echo "▶ Using dynamic domain: $DOMAIN"
-./install_prereqs.sh
-./gen_ssl_letsencrypt.sh "$DOMAIN"
-./deploy_n8n.sh "$DOMAIN"
-./install_community_nodes.sh
-echo "✅ n8n is running at https://$DOMAIN"
 
-echo "$DOMAIN" > /root/n8n/domain.txt
-scripts/setup_cron.sh
+export DEBIAN_FRONTEND=noninteractive
 
-scripts/install_greenapi_router.sh
+echo "▶ Using dynamic domain: $(curl -s https://api.ipify.org).nip.io"
+
+cd "$(dirname "$0")"
+
+echo "🔧 Installing prerequisites..."
+./scripts/install_prereqs.sh
+
+echo "🔌 Pulling docker images (non-interactive)..."
+docker compose pull || true
+
+echo "🔁 Copying env example if missing..."
+[ ! -f .env ] && cp -f .env.example .env
+
+echo "📦 Installing community nodes..."
+./scripts/install_community_nodes.sh
+
+echo "🚀 Deploying n8n..."
+docker compose down --remove-orphans
+docker compose up -d
+
+echo "✅ n8n installation completed successfully"
