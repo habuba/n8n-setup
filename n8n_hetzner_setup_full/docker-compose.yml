@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: always
+    ports:
+      - "443:5678"
+    environment:
+      - GENERIC_TIMEZONE=Asia/Jerusalem
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin1234
+      - N8N_PROTOCOL=https
+      - N8N_HOST=0.0.0.0
+      - WEBHOOK_URL=https://$(curl -s https://api.ipify.org).nip.io/
+    volumes:
+      - ./data:/home/node/.n8n
+      - ./custom:/files/custom
