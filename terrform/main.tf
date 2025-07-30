@@ -25,6 +25,3 @@ resource "hcloud_server" "n8n" {
   user_data   = file("cloud-init.yaml")
 }
 
-output "server_ip" {
-  value = hcloud_server.n8n.ipv4_address
-}

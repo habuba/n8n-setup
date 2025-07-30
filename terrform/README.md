@@ -1,47 +1,93 @@
-# n8n Hetzner Self-Hosted Setup
+# Hetzner n8n Auto-Provision with Terraform & Cloud-Init
 
-This repository provides a complete cloud-init-compatible setup for running `n8n` self-hosted with Docker, HTTPS, and custom nodes.
+This project automates the deployment of an [n8n](https://n8n.io) server on a Hetzner Cloud VM using **Terraform** and **cloud-init**.
 
-## 🧰 Features
+The setup includes:
 
-- n8n via Docker with SSL (nip.io)
-- Auto-install community nodes
-- Support for Python dependencies
-- Custom `.env` and `docker-compose.yml`
+- 🐳 Docker & Docker Compose installation
+- 🐍 Python 3 + pip installation
+- 🔄 Git clone of your custom n8n setup repository
+- 🌐 Auto HTTPS with `nip.io` using your dynamic public IP
+- 🚀 Full automatic execution of `install_with_nip.sh` from your GitHub repo
 
-## 📁 Structure
+---
+
+## 📁 Project Structure
+
+```bash
+.
+├── main.tf                # Terraform configuration for Hetzner VM
+├── variables.tf           # Input variables (token, ssh key path, etc.)
+├── terraform.tfvars       # Your actual values (not committed if private)
+├── cloud-init.yaml        # Boot-time configuration (uses your GitHub setup)
+└── cloud_install.sh       # Script to install Docker, Python, and launch n8n
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+
+- Hetzner Cloud account with API token
+- SSH public key (`id_rsa.pub`) already generated
+- Terraform installed on your local machine
+- PuTTY or OpenSSH client for connecting to the server
+
+### 2. Clone this Repo and Configure
+
+```bash
+git clone https://github.com/YOUR_USERNAME/n8n-hetzner-terraform.git
+cd n8n-hetzner-terraform
+```
+
+Edit `terraform.tfvars` and update:
+
+```hcl
+hcloud_token         = "your_hetzner_token_here"
+public_ssh_key_path  = "C:\\Users\\yourname\\.ssh\\id_rsa.pub"
+server_type          = "cx22"
+```
+
+---
+
+### 3. Deploy the Server
+
+```bash
+terraform init
+terraform apply
+```
+
+After 2–4 minutes, the server will be ready.
+
+---
+
+## 🔗 Access n8n
+
+Once the server is up, access your n8n instance at:
 
 ```
-n8n_hetzner_setup_full/
-├── .env.example
-├── cloud_install_logged.sh
-├── docker-compose.yml
-├── install_with_nip.sh
-├── scripts/
-│   ├── deploy_n8n.sh
-│   ├── gen_ssl_letsencrypt.sh
-│   ├── install_community_nodes.sh
-│   └── install_prereqs.sh
+https://<server-ip>.nip.io
 ```
 
-## 🚀 Usage
+> Example: `https://37.27.89.162.nip.io`
 
-1. Deploy Hetzner cloud server with `cloud-init.yaml` (see below)
-2. n8n will be available at `https://YOUR_SERVER_IP.nip.io`
+---
 
-## ☁️ cloud-init.yaml
+## 🛠 Custom Setup Repo
 
-```yaml
-#cloud-config
-package_update: true
-packages:
-  - unzip
-  - curl
-  - git
-runcmd:
-  - cd /root
-  - apt update && apt install -y curl git unzip
-  - curl -L https://raw.githubusercontent.com/habuba/n8n-setup/main/n8n_hetzner_setup_full/cloud_install_logged.sh -o cloud_install_logged.sh
-  - chmod +x cloud_install_logged.sh
-  - ./cloud_install_logged.sh
+This project pulls your installation scripts from:
+
 ```
+https://github.com/habuba/n8n-setup/tree/main/n8n_hetzner_setup_full
+```
+
+Make sure the following file exists and is executable:
+
+- `cloud_install.sh` ← The installer executed by cloud-init
+
+---
+
+## 🧰 License
+
+MIT License © 2025 @habuba

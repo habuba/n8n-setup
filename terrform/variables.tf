@@ -1,18 +1,34 @@
 variable "hcloud_token" {
-  type = string
+  description = "Hetzner Cloud API token"
+  type        = string
+  sensitive   = true
 }
 
-variable "public_ssh_key_path" {
-  type    = string
-  default = "C:\\Users\\YOUR_USERNAME\\.ssh\\id_rsa.pub"
+variable "server_name" {
+  description = "Name of the server"
+  type        = string
+  default     = "n8n-server"
 }
 
 variable "server_type" {
-  type    = string
-  default = "cx22"
+  description = "Hetzner server type"
+  type        = string
+  default     = "cx22"
+}
+
+variable "image" {
+  description = "Image to use for the server"
+  type        = string
+  default     = "ubuntu-22.04"
 }
 
 variable "location" {
-  type    = string
-  default = "hel1"
+  description = "Location for the server"
+  type        = string
+  default     = "hel1"
+}
+
+variable "public_ssh_key_path" {
+  description = "Path to the public SSH key to upload to Hetzner"
+  type        = string
 }
