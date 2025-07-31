@@ -2,26 +2,50 @@
 package_update: true
 package_upgrade: true
 
+packages:
+  - git
+  - curl
+  - unzip
+  - python3
+  - python3-pip
+  - apt-transport-https
+  - ca-certificates
+  - gnupg
+  - lsb-release
+  - certbot
+
 runcmd:
-  - echo "🔧 Installing system dependencies..."
-  - apt update && apt install -y python3 python3-pip curl git gnupg ca-certificates lsb-release
-
-  - echo "🐍 Installing Python + yt-dlp..."
-  - pip3 install --upgrade pip
-  - pip3 install yt-dlp
-
-  - echo "🐳 Installing Docker..."
-  - install -m 0755 -d /etc/apt/keyrings
+  - echo "🔧 Installing Docker prerequisites..."
+  - mkdir -m 0755 -p /etc/apt/keyrings
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
   - chmod a+r /etc/apt/keyrings/docker.gpg
-  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-  - apt update && apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" > /etc/apt/sources.list.d/docker.list
+  - apt update
+  - apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-  - echo "📁 Creating /root/n8n directory and setting permissions"
+  - echo "🔐 Detecting domain and saving to file..."
+  - DOMAIN="$(curl -s https://api.ipify.org).nip.io"
+  - echo "$DOMAIN" > /root/n8n/domain.txt
+
+  - echo "🐙 Cloning setup repo..."
+  - git clone https://github.com/habuba/n8n-setup.git /root/n8n-setup || true
+  - cd /root/n8n-setup/n8n_hetzner_setup_full
+  - chmod +x install_with_nip.sh scripts/*.sh
+
+  - echo "📦 Installing prerequisites..."
+  - ./scripts/install_prereqs.sh
+
+  - echo "📦 Installing yt-dlp and community nodes..."
+  - ./install_community_nodes.sh
+
+  - echo "📁 Creating data folder and setting permissions..."
   - mkdir -p /root/n8n/data
   - chown -R 1000:1000 /root/n8n/data
 
-  - echo "📦 Writing docker-compose.yml file"
+  - echo "🔐 Generating SSL certificates..."
+  - ./scripts/gen_ssl_letsencrypt.sh "$DOMAIN"
+
+  - echo "⚙️ Writing docker-compose.yml"
   - |
     cat <<EOF > /root/n8n/docker-compose.yml
     services:
@@ -34,28 +58,31 @@ runcmd:
         environment:
           - GENERIC_TIMEZONE=Asia/Jerusalem
           - N8N_PROTOCOL=https
-          - N8N_HOST=0.0.0.0
-          - WEBHOOK_URL=https://\$(curl -s https://api.ipify.org).nip.io/
+          - N8N_HOST=$DOMAIN
+          - WEBHOOK_URL=https://$DOMAIN/
           - N8N_RUNNERS_ENABLED=true
         env_file:
           - /root/n8n/.env
         volumes:
           - ./data:/home/node/.n8n
+          - /root/n8n-setup/n8n_hetzner_setup_full/ssl:/files
     EOF
 
-  - echo "🔐 Writing credentials to .env"
+  - echo "🔑 Creating .env"
   - |
     cat <<EOF > /root/n8n/.env
     N8N_BASIC_AUTH_ACTIVE=true
     N8N_BASIC_AUTH_USER=admin
-    N8N_BASIC_AUTH_PASSWORD=admin1234
+    N8N_BASIC_AUTH_PASSWORD=$(openssl rand -base64 16)
     EOF
   - chmod 600 /root/n8n/.env
 
-  - echo "✅ Enabling Docker and starting n8n"
-  - systemctl enable docker
+  - echo "🕒 Setting up cron jobs"
+  - ./scripts/setup_cron.sh
+
+  - echo "🚀 Deploying n8n"
   - cd /root/n8n
   - docker compose pull
   - docker compose up -d
 
-final_message: "✅ n8n is up and running at https://<your-ip>.nip.io"
+final_message: "✅ n8n deployed with SSL at https://<your-ip>.nip.io (check /root/n8n/domain.txt)"
