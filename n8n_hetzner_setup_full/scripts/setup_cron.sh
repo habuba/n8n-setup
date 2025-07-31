@@ -1,14 +1,25 @@
-#!/usr/bin/env bash
+#!/bin/bash
 set -euo pipefail
 
 DOMAIN=$(cat /root/n8n/domain.txt)
+SSL_DIR="/root/n8n-setup/n8n_hetzner_setup_full/ssl"
+RENEW_SCRIPT="/root/n8n-setup/n8n_hetzner_setup_full/scripts/renew_ssl.sh"
 
-crontab -l 2>/dev/null | grep -v "renew_ssl.sh" | grep -v "update_n8n.sh" > /tmp/cron.tmp || true
+echo "📄 Creating renew_ssl.sh script..."
+cat > "$RENEW_SCRIPT" <<EOF
+#!/bin/bash
+DOMAIN="$DOMAIN"
+SSL_DIR="$SSL_DIR"
 
-echo "0 3 * * 0 /root/n8n/renew_ssl.sh $DOMAIN >> /var/log/n8n_ssl_renew.log 2>&1" >> /tmp/cron.tmp
-echo "0 4 * * * /root/n8n/update_n8n.sh >> /var/log/n8n_update.log 2>&1" >> /tmp/cron.tmp
+certbot renew --quiet --standalone
 
-crontab /tmp/cron.tmp
-rm /tmp/cron.tmp
+cp /etc/letsencrypt/live/\$DOMAIN/fullchain.pem "\$SSL_DIR/n8n.crt"
+cp /etc/letsencrypt/live/\$DOMAIN/privkey.pem "\$SSL_DIR/n8n.key"
 
-echo "✅ Cron jobs installed for SSL renewal and n8n update"
+docker restart n8n
+EOF
+
+chmod +x "$RENEW_SCRIPT"
+
+echo "🕒 Setting up daily cron job for certificate renewal..."
+(crontab -l 2>/dev/null; echo "0 4 * * * $RENEW_SCRIPT >> /var/log/ssl_renew.log 2>&1") | crontab -
