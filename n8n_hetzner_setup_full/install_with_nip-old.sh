@@ -3,6 +3,7 @@ set -euo pipefail
 
 echo "🌍 Fetching IP and building unique domain..."
 DOMAIN="test-$(date +%s).$(curl -s https://api.ipify.org).nip.io"
+#DOMAIN="$(curl -s https://api.ipify.org).nip.io"
 echo "▶ Using dynamic domain: $DOMAIN"
 
 mkdir -p /root/n8n
@@ -39,22 +40,10 @@ N8N_BASIC_AUTH_PASSWORD=$(openssl rand -base64 16)
 EOF
 chmod 600 /root/n8n/.env
 
-echo "📁 Copying docker-compose.yml..."
-cp docker-compose.yml /root/n8n/docker-compose.yml
-
-echo "📁 Creating data folder with correct permissions..."
-mkdir -p /root/n8n/data
-chown -R 1000:1000 /root/n8n/data
-
-echo "📁 Copying custom and ssl folders..."
-cp -r ./custom /root/n8n/ || true
-cp -r ./ssl /root/n8n/ || true
-
 echo "🚀 Deploying n8n..."
-cd /root/n8n
-docker compose down -v || true
-docker compose up -d
+./scripts/deploy_n8n.sh
 
 echo "🕒 Setting up auto-renewal cron..."
-cd /root/n8n-setup/n8n_hetzner_setup_full
 ./scripts/setup_cron.sh
+
+echo "🧠 Note: SSL auto-renewal will try to renew for this dynamic domain. If using a random subdomain, renewal may fail unless domain remains mapped to the server."
