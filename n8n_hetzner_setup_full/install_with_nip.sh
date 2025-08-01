@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "🌍 Fetching IP and building domain..."
-DOMAIN="$(curl -s https://api.ipify.org).nip.io"
+echo "🌍 Fetching IP and building unique domain..."
+DOMAIN="test-$(date +%s).$(curl -s https://api.ipify.org).nip.io"
 echo "▶ Using dynamic domain: $DOMAIN"
 
 mkdir -p /root/n8n
@@ -11,7 +11,6 @@ echo "✅ Domain saved to /root/n8n/domain.txt"
 
 cd "$(dirname "$0")"
 
-# FIX: ensure install_community_nodes.sh is executable
 chmod +x ./install_community_nodes.sh
 
 echo "🔧 Installing prerequisites..."
@@ -45,3 +44,5 @@ echo "🚀 Deploying n8n..."
 
 echo "🕒 Setting up auto-renewal cron..."
 ./scripts/setup_cron.sh
+
+echo "🧠 Note: SSL auto-renewal will try to renew for this dynamic domain. If using a random subdomain, renewal may fail unless domain remains mapped to the server."
