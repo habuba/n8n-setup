@@ -1,28 +1,26 @@
-# n8n Hetzner Setup (Auto Install)
+# ⚙️ n8n Hetzner Auto-Install Scripts
 
-This repository automates the setup of an `n8n` instance on a Hetzner Ubuntu server.
+This folder contains scripts to automate n8n installation on a Hetzner Ubuntu server.
 
-## Includes
+## 📦 What It Does
 
-- Docker + Docker Compose
-- Python + pip + yt-dlp
-- Community nodes:
-  - `@endcycles/n8n-nodes-youtube-transcript`
-  - `greenapi` (custom)
-- Auto-deploy with `.nip.io` domain
+- Installs Docker & certbot
+- Generates dynamic domain (using `nip.io`)
+- Issues a Let's Encrypt SSL certificate
+- Deploys n8n via Docker Compose
+- Installs optional community nodes
+- Sets up cron job for SSL auto-renewal
+- Generates `.env` with random basic auth password
 
-## Usage with Terraform
+## 🛠 Usage (Manual)
 
-Use the provided `cloud-init.yaml` with your `main.tf`. Example:
-
-```
-filename = "${path.module}/cloud-init.yaml"
-```
-
-## Manual Run (for testing)
+SSH into your Hetzner VM, then:
 
 ```bash
-chmod -R +x ./scripts
-chmod +x install_with_nip.sh
-./install_with_nip.sh
+git clone https://github.com/habuba/n8n-setup.git /root/n8n-setup
+cd /root/n8n-setup/n8n_hetzner_setup_full
+chmod +x install_with_nip.sh scripts/*.sh
+./install_with_nip.sh | tee /root/n8n-install.log
 ```
+
+When done, n8n will be available at: `https://<your-ip>.nip.io`
