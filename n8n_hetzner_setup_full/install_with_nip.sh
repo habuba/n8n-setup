@@ -2,8 +2,8 @@
 set -euo pipefail
 
 echo "🌍 Fetching IP and building unique domain..."
-#DOMAIN="test-$(date +%s).$(curl -s https://api.ipify.org).nip.io"
-DOMAIN="$(curl -s https://api.ipify.org).nip.io"
+DOMAIN="test-$(date +%s).$(curl -s https://api.ipify.org).nip.io"
+#DOMAIN="$(curl -s https://api.ipify.org).nip.io"
 echo "▶ Using dynamic domain: $DOMAIN"
 
 mkdir -p /root/n8n
