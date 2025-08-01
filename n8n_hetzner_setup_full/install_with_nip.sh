@@ -11,6 +11,9 @@ echo "✅ Domain saved to /root/n8n/domain.txt"
 
 cd "$(dirname "$0")"
 
+# FIX: ensure install_community_nodes.sh is executable
+chmod +x ./install_community_nodes.sh
+
 echo "🔧 Installing prerequisites..."
 ./scripts/install_prereqs.sh
 
