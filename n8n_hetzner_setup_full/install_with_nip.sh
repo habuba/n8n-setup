@@ -3,7 +3,6 @@ set -euo pipefail
 
 #DOMAIN="$(curl -s https://api.ipify.org).nip.io"
 DOMAIN="n8n.$(curl -s https://api.ipify.org).nip.io"
-
 #DOMAIN="test-$(date +%s).$(curl -s https://api.ipify.org).nip.io"
 
 echo "▶ Using dynamic domain: $DOMAIN"
@@ -21,6 +20,7 @@ cp .env.example .env || true
 
 sleep 10
 
+echo "🔐 Generating SSL certificate..."
 ./scripts/gen_ssl_letsencrypt.sh "$DOMAIN" || {
     echo "❌ SSL generation failed"
     exit 1
@@ -45,8 +45,10 @@ cp -r ./custom /root/n8n/ || true
 cp -r ./ssl /root/n8n/ || true
 mkdir -p /root/n8n/greenapi-router/config
 
+echo "🔒 Fixing SSL permissions..."
 ./scripts/fix_ssl_permissions.sh
 
+echo "🧩 Generating docker-compose.yml..."
 ./scripts/generate_compose.sh
 
 cd /root/n8n
@@ -54,6 +56,8 @@ docker compose down -v || true
 docker compose up -d
 
 cd /root/n8n-setup/n8n_hetzner_setup_full
+
+echo "📅 Setting up SSL auto-renew cron job..."
 ./scripts/setup_cron.sh
 
 echo "🟢 GreenAPI Router available at: http://$DOMAIN:3002"
