@@ -1,7 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
-DOMAIN="$(curl -s https://api.ipify.org).nip.io"
+#DOMAIN="$(curl -s https://api.ipify.org).nip.io"
+DOMAIN="n8n.$(curl -s https://api.ipify.org).nip.io"
+
+#DOMAIN="test-$(date +%s).$(curl -s https://api.ipify.org).nip.io"
+
 echo "▶ Using dynamic domain: $DOMAIN"
 
 mkdir -p /root/n8n
