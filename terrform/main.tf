@@ -43,7 +43,7 @@ resource "hcloud_firewall" "n8n_firewall" {
 
 
   dynamic "rule" {
-    for_each = [22, 80, 3002]
+    for_each = [22, 3002]
     content {
       direction   = "in"
       protocol    = "tcp"
@@ -51,6 +51,12 @@ resource "hcloud_firewall" "n8n_firewall" {
       source_ips  = [local.my_ip_cidr]
       description = "Allow port ${rule.value} from Terraform runner IP"
     }
+  }
+  rule {
+    direction  = "in"
+    protocol   = "tcp"
+    port       = "80"
+    source_ips = ["0.0.0.0/0", "::/0"]
   }
   
   
