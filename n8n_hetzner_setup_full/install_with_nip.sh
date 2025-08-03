@@ -33,11 +33,14 @@ echo "🔐 Generating SSL certificate..."
 }
 
 echo "🔑 Creating .env file for n8n..."
+GREEN_API_TOKEN=$(openssl rand -hex 16)
+
 cat <<EOF > /root/n8n/.env
 N8N_BASIC_AUTH_ACTIVE=true
 N8N_BASIC_AUTH_USER=admin
 N8N_BASIC_AUTH_PASSWORD=$(openssl rand -base64 16)
 EOF
+echo "GREEN_API_TOKEN=$GREEN_API_TOKEN" >> /root/n8n/.env
 chmod 600 /root/n8n/.env
 
 echo "📁 Copying docker-compose.yml..."
@@ -59,3 +62,6 @@ docker compose up -d
 echo "🕒 Setting up auto-renewal cron..."
 cd /root/n8n-setup/n8n_hetzner_setup_full
 ./scripts/setup_cron.sh
+
+echo "🟢 GreenAPI Router available at: http://$(hostname -I | awk '{print $1}'):3002"
+echo "🔐 Token: $GREEN_API_TOKEN"
