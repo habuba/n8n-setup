@@ -43,7 +43,7 @@ resource "hcloud_firewall" "n8n_firewall" {
 
 
   dynamic "rule" {
-    for_each = [22, 3002]
+    for_each = [22, 444]
     content {
       direction   = "in"
       protocol    = "tcp"

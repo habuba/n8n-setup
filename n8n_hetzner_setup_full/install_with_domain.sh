@@ -44,7 +44,13 @@ mkdir -p /root/n8n/greenapi-router/config
 ./scripts/fix_ssl_permissions.sh
 ./scripts/generate_compose.sh
 
+
+echo "📁 Copying nginx config, htpasswd file, and reset script..."
 cp ./nginx_greenapi.conf /root/n8n/ || true
+cp ./greenapi.htpasswd /root/n8n/ || true
+cp ./reset_greenapi_password.sh /root/n8n/ || true
+chmod +x /root/n8n/reset_greenapi_password.sh
+
 
 cd /root/n8n
 docker compose down -v || true
