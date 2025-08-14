@@ -51,6 +51,8 @@ echo "🔒 Fixing SSL permissions..."
 echo "🧩 Generating docker-compose.yml..."
 ./scripts/generate_compose.sh
 
+cp ./nginx_greenapi.conf /root/n8n/ || true
+
 cd /root/n8n
 docker compose down -v || true
 docker compose up -d
