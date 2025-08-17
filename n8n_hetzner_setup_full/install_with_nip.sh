@@ -61,7 +61,8 @@ chmod +x /root/n8n/reset_greenapi_password.sh
 
 cd /root/n8n
 docker compose down -v || true
-docker compose up -d
+docker compose up -d --build
+
 
 cd /root/n8n-setup/n8n_hetzner_setup_full
 
