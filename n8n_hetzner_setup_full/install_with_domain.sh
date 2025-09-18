@@ -56,6 +56,8 @@ cd /root/n8n
 docker compose down -v || true
 docker compose up -d --build
 
+chown -R 1000:1000 ~/n8n/sqlite
+
 cd /root/n8n-setup/n8n_hetzner_setup_full
 ./scripts/setup_cron.sh
 

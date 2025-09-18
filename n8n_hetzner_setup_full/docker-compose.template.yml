@@ -20,6 +20,14 @@ services:
       - N8N_COMMUNITY_PACKAGES_ENABLED=true
       - N8N_CUSTOM_EXTENSIONS=/home/node/.n8n/custom
       - N8N_SECURE_COOKIE=false
+
+      # הגדרות DB ל־Postgres
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${DB_NAME}
+      - DB_POSTGRESDB_USER=${DB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
     volumes:
       - ./data:/home/node/.n8n
       - ./custom:/files/custom
@@ -40,10 +48,58 @@ services:
     container_name: greenapi-ssl
     restart: always
     ports:
-      - "444:443"
+      - "444:444"   # GreenAPI דרך SSL
+      - "445:445"   # WAHA דרך SSL
     depends_on:
       - greenapi-router
     volumes:
       - ./ssl:/etc/nginx/ssl:ro
       - ./nginx_greenapi.conf:/etc/nginx/conf.d/default.conf:ro
       - ./greenapi.htpasswd:/etc/nginx/.htpasswd:ro
+
+
+
+  waha:
+    image: devlikeapro/waha:noweb   # Core חינמי תומך ב-NOWEB
+    container_name: waha-server
+    restart: unless-stopped
+    ports:
+      - "9278:3000"
+    env_file:
+      - .env          # כאן שמים את ה־API key והסיסמאות
+    environment:
+      - TZ=Asia/Jerusalem
+      - WAHA_LOG_LEVEL=INFO
+      - WAHA_START_SESSIONS=default
+      - WAHA_SESSIONS_STORAGE=file
+      - WAHA_DOWNLOAD_MEDIA=true
+      - WHATSAPP_FILES_FOLDER=/app/.media
+      - WHATSAPP_FILES_LIFETIME=604800  # שבוע
+      - WAHA_RESTART_ALL_SESSIONS=true
+    volumes:
+      - ./sessions.json:/app/sessions/sessions.json
+      - waha_sessions:/app/sessions
+      - ./media:/app/.media
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: whatsapp-sync-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      - "5432:5432"   # פתוח גם מבחוץ
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  waha_sessions:
+  postgres_data:
