@@ -2,7 +2,7 @@
 set -euo pipefail
 
 DOMAIN=$(cat /root/n8n/domain.txt)
-SSL_DIR="/root/n8n-setup/n8n_hetzner_setup_full/ssl"
+SSL_DIR="/root/n8n/ssl"
 RENEW_SCRIPT="/root/n8n-setup/n8n_hetzner_setup_full/scripts/renew_ssl.sh"
 
 echo "📄 Creating renew_ssl.sh script..."

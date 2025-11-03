@@ -76,8 +76,7 @@ services:
       - WHATSAPP_FILES_FOLDER=/app/.media
       - WHATSAPP_FILES_LIFETIME=604800  # שבוע
       - WAHA_RESTART_ALL_SESSIONS=true
-    volumes:
-      - ./sessions.json:/app/sessions/sessions.json
+    volumes:      
       - waha_sessions:/app/sessions
       - ./media:/app/.media
 

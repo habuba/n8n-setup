@@ -3,7 +3,7 @@ set -euo pipefail
 
 DOMAIN="${1:-}"
 EMAIL="admin@$DOMAIN"
-SSL_DIR="/root/n8n-setup/n8n_hetzner_setup_full/ssl"
+SSL_DIR="/root/n8n/ssl"
 
 if [[ -z "$DOMAIN" ]]; then
   echo "❌ No domain provided"
